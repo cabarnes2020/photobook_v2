@@ -12,10 +12,13 @@ export interface IPhotographer {
 
 export interface IPhotographerModel extends IPhotographer, Document {}
 
-const PhotographerSchema = new Schema<IPhotographer>({
+const PhotographerSchema: Schema = new Schema({
     firstName: {type: String, required: true },
     lastName: {type: String, required: true},
     email: {type: String, required: true},
     gallery: [{type: String}],
     reviews: [{type: Schema.Types.ObjectId, ref: 'Review'}]
 })
+
+
+export default mongoose.model<IPhotographerModel>('Photographer', PhotographerSchema);
