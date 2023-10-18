@@ -127,10 +127,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         throw new Error(`This user doesn't exist`);
     }
 
-    //Compare password with hashed password in db, then create JWT token
     if (!process.env.ACCESS_TOKEN_SECRET) {
         throw new Error('ACCESS_TOKEN_SECRET must be defined');
     }
+
+    //Compare password with hashed password in db, then create JWT token
     if (someUser && (await bcrypt.compare(password, someUser.password))) {
         const accessToken = jwt.sign(
             {

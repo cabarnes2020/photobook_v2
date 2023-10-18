@@ -7,9 +7,14 @@ export interface IReview {
 
 export interface IReviewModel extends IReview, Document {}
 
-const ReviewSchema: Schema = new Schema({
-    reviewer: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
-    content: { type: String, required: true }
-});
+const ReviewSchema: Schema = new Schema(
+    {
+        reviewer: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+        content: { type: String, required: true }
+    },
+    {
+        timestamps: true
+    }
+);
 
 export default mongoose.model<IReviewModel>('Review', ReviewSchema);
