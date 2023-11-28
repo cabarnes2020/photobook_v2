@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import User from '../models/User.js';
 
 dotenv.config();
-/** Retrieves all photographers in database */
+/** Gets all photographers in database */
 export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
         // Returns all
@@ -19,7 +19,7 @@ export const getAllUsers = async (req: Request, res: Response, next: NextFunctio
     }
 };
 
-/** Retrieve a photographer by its id */
+/** Get a photographer by its id */
 export const getUserByID = async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.userId;
     try {
