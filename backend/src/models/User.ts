@@ -9,7 +9,7 @@ export interface IUser {
     password: string
 }
 
-export interface IUserModel extends IUser, Document {}
+export interface IUserDocument extends IUser, Document {}
 
 
 const UserSchema: Schema = new Schema(
@@ -24,4 +24,4 @@ const UserSchema: Schema = new Schema(
         timestamps: true
     })
 
-export default mongoose.model<IUserModel>('Review', UserSchema);
+export default mongoose.model<IUserDocument>('User', UserSchema);

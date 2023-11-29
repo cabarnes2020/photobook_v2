@@ -2,9 +2,10 @@ import express, { NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
-import { config } from './config/config.js';
 import userRouter from './routes/userRoutes.js';
+import { errorHandler } from './middleware/errorMiddleware.js';
+import { connectDB } from './database/db.js';
+import { PORT } from './config/config.js';
 
 dotenv.config();
 
@@ -16,12 +17,7 @@ dotenv.config();
 const app = express();
 
 /** Connect to Mongo */
-try {
-    await mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' });
-    console.log('Connected to MongoDB');
-} catch (e) {
-    console.log('Error connecting to MongoDB', e);
-}
+connectDB()
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -42,12 +38,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use('/api/users', userRouter);
+app.use(errorHandler)
 
 /** Make sure server is working correctly */
 app.get('/', (req: Request, res: Response) => {
     res.status(200).send('Hello World!');
 });
 
-app.listen(config.server.port, () => {
-    console.log(`App is listening on port ${config.server.port}`);
+app.listen(PORT, () => {
+    console.log(`App is listening on port ${PORT}`);
 });

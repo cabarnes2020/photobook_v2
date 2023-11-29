@@ -1,151 +1,63 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
+import asyncHandler from 'express-async-handler'
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import User from '../models/User.js';
 
+import { getAllUsersService, getUserByIdService, createUserService, updateUserService, deleteUserService } from '../services/UserService.js';
 dotenv.config();
 /** Gets all photographers in database */
-export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        // Returns all
-        const users = await User.find({});
+export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
+   const users = await getAllUsersService()
 
-        return res.status(200).json(users);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+   res.status(200).json(users)
+});
 
 /** Get a photographer by its id */
-export const getUserByID = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
-    try {
-        const user = await User.findById(userId);
-
-        return res.status(200).json(user);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+export const getUserById = asyncHandler(async (req: Request, res: Response) => {
+    
+    const user = await getUserByIdService(req.params.id ? req.params.id : '')
+ 
+    res.status(200).json(user)
+ });
 
 /** Creates new instance of Photographer model */
-export const createUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { user } = req.body;
-    try {
-        const newUser = new User({
-            firstName: user.firstName,
-            lastName: user.lastName,
-            email: user.email,
-            password: user.password
-        });
-        await newUser.save();
+export const createUser = asyncHandler(async (req: Request, res: Response) => {
+    if(!req.body.firstName || 
+        !req.body.lastName || 
+        !req.body.firstName || 
+        !req.body.email || 
+        !req.body.userName || 
+        !req.body.password ) throw new Error("Required information is missing")
 
-        return res.status(200).json(newUser);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+    const newUser = await createUserService(req.body)
+ 
+    res.status(201).json(newUser)
+ });
 
 /** Update an instance of a photographer  */
-export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
-
-    try {
-        const user = await User.findByIdAndUpdate(userId, req.body, { new: true });
-
-        if (user) {
-            return res.status(200).json(user);
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({ message: 'Not found' });
-    }
-};
+export const updateUser = asyncHandler(async (req: Request, res: Response) => {
+    const updatedUser = await updateUserService(req.params.id ? req.params.id : '', req.body)
+ 
+    res.status(200).json(updatedUser)
+ });
 
 /** Delete a specific photographer from the db */
-export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
-    const userId = req.params.userId;
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+    const deletedUser = await deleteUserService(req.params.id ? req.params.id : '')
+ 
+    res.status(200).json({message: `User ${req.params.id} is deleted`})
+ });
 
-    return await User.findByIdAndDelete(userId).then((user) => (user ? res.status(201).json({ message: `${user.userName} has been deleted` }) : res.status(404).json({ message: 'Not found' })));
-};
+// export const registerUser = asyncHandler(async (req: Request, res: Response) => {
+//     const registeredUser = await registerUserService()
+ 
+//     res.status(200).json(registeredUser)
+//  });
 
-export const registerUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { userName, email, password, firstName, lastName } = req.body;
-
-    //Ensure that all fields were inputted by user on signup
-    if (!userName || !email || !password || !firstName || !lastName) {
-        res.status(400);
-        throw new Error('All fields are mandatory!');
-    }
-
-    //Check if user is already registered
-    const checkIfUserExists = await User.findOne({ email });
-    if (checkIfUserExists) {
-        res.status(400);
-        throw new Error('This user already exists.');
-    }
-
-    //Hash password so it is secure in database
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
-        firstName,
-        lastName,
-        email,
-        userName,
-        password: hashedPassword
-    });
-
-    console.log(`Created new user: ${userName}`);
-
-    if (newUser) {
-        res.status(201).json(newUser);
-    } else {
-        res.status(400);
-        throw new Error('User data is not valid.');
-    }
-};
-
-export const login = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
-
-    //Ensure that all fields were inputted by user on signup
-    if (!email || !password) {
-        res.status(400);
-        throw new Error('All fields are mandatory!');
-    }
-
-    //Check if user exists in db
-    const someUser = await User.findOne({ email });
-    if (!someUser) {
-        res.status(400);
-        throw new Error(`This user doesn't exist`);
-    }
-
-    if (!process.env.ACCESS_TOKEN_SECRET) {
-        throw new Error('ACCESS_TOKEN_SECRET must be defined');
-    }
-
-    //Compare password with hashed password in db, then create JWT token
-    if (someUser && (await bcrypt.compare(password, someUser.password))) {
-        const accessToken = jwt.sign(
-            {
-                user: {
-                    userName: someUser.userName,
-                    email: someUser.email,
-                    id: someUser.id
-                }
-            },
-            process.env.ACCESS_TOKEN_SECRET
-        );
-        res.status(200).json({ accessToken });
-    } else {
-        res.status(401);
-        throw new Error('Email or password is not valid.');
-    }
-};
+// export const login = asyncHandler(async (req: Request, res: Response) => {
+//     const loggedInUser = await loginService()
+ 
+//     res.status(200).json(loggedInUser)
+//  });
