@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 import { getAllUsersService, getUserByIdService, createUserService, updateUserService, deleteUserService } from '../services/UserService.js';
+import HttpException from '../utils/httpException.js';
 dotenv.config();
 /** Gets all photographers in database */
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
@@ -16,21 +17,15 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
 
 /** Get a photographer by its id */
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
-    
-    const user = await getUserByIdService(req.params.id ? req.params.id : '')
+    if(!req.params.id) throw new HttpException(400, 'User ID is missing')
+
+    const user = await getUserByIdService(req.params.id)
  
     res.status(200).json(user)
  });
 
 /** Creates new instance of Photographer model */
 export const createUser = asyncHandler(async (req: Request, res: Response) => {
-    if(!req.body.firstName || 
-        !req.body.lastName || 
-        !req.body.firstName || 
-        !req.body.email || 
-        !req.body.userName || 
-        !req.body.password ) throw new Error("Required information is missing")
-
     const newUser = await createUserService(req.body)
  
     res.status(201).json(newUser)
@@ -38,14 +33,18 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
 
 /** Update an instance of a photographer  */
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {
-    const updatedUser = await updateUserService(req.params.id ? req.params.id : '', req.body)
+    if(!req.params.id) throw new HttpException(400, 'User ID is missing')
+
+    const updatedUser = await updateUserService(req.params.id, req.body)
  
     res.status(200).json(updatedUser)
  });
 
 /** Delete a specific photographer from the db */
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-    const deletedUser = await deleteUserService(req.params.id ? req.params.id : '')
+    if(!req.params.id) throw new HttpException(400, 'User ID is missing')
+
+    await deleteUserService(req.params.id)
  
     res.status(200).json({message: `User ${req.params.id} is deleted`})
  });

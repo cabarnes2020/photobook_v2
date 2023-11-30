@@ -1,6 +1,7 @@
 import { checkIsValidObjectId } from "../database/db.js";
 import User, { IUserDocument } from "../models/User.js";
 import { IUser } from "../models/User.js";
+import { sanitizeUser } from "../sanitizers/userSanitizer.js";
 
 
 export async function getAllUsersService(): Promise<IUser[]> {
@@ -28,8 +29,11 @@ export async function getUserByIdService(userId: string): Promise<IUserDocument>
 
 /** Creates new instance of Photographer model */
 export async function createUserService(user: IUser): Promise<IUser> {
+    const cleanUser = sanitizeUser(user)
+    
     try {
-        const newUser = await User.create(user) 
+        const newUser = await User.create(cleanUser) 
+        
         if(!newUser) throw new Error('User not created')
         return newUser
     } catch (err) {
@@ -40,9 +44,9 @@ export async function createUserService(user: IUser): Promise<IUser> {
 /** Update an instance of a photographer  */
 export async function updateUserService(userId: string, user: IUser): Promise<IUser> {
     checkIsValidObjectId(userId)
-
+    const cleanUser = sanitizeUser(user)
     try{
-        const updatedUser = await User.findByIdAndUpdate(userId, user, { new: true });
+        const updatedUser = await User.findByIdAndUpdate(userId, cleanUser, { new: true });
         if (!updatedUser) throw new Error('User could not be updated')
         return updatedUser
     } catch (err) {

@@ -17,7 +17,7 @@ const PhotographerSchema: Schema = new Schema(
         lastName: { type: String, required: true },
         email: { type: String, required: true },
         gallery: [{ type: String }],
-        reviews: [{ type: Schema.Types.ObjectId, ref: 'Review' }]
+        reviews: [{ type: Schema.Types.ObjectId, default: [], ref: 'Review' }]
     },
     {
         timestamps: true
