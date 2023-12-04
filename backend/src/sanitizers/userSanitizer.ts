@@ -1,7 +1,10 @@
 import { IUser } from "../models/User.js";
 import HttpException from "../utils/httpException.js";
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 
-export function sanitizeUser(user: IUser): IUser {
+
+export async function sanitizeUser(user: IUser): Promise<IUser> {
     if(!user) throw new HttpException(400, 'User is not defined')
 
     let sanitizedUser = <IUser>{}
@@ -10,7 +13,16 @@ export function sanitizeUser(user: IUser): IUser {
     sanitizedUser.lastName = sanitizeLastName(user.lastName)
     sanitizedUser.email = sanitizeEmail(user.email)
     sanitizedUser.userName = sanitizeUserName(user.userName)
-    sanitizedUser.password = sanitizePassword(user.password)
+    sanitizedUser.password = await sanitizePassword(user.password)
+    return sanitizedUser
+}
+
+export async function sanitizeLogin(email: string, password: string): Promise<IUser> {
+    let sanitizedUser = <IUser>{}
+
+    sanitizedUser.email = sanitizeEmail(email)
+    sanitizedUser.password = await sanitizePassword(password)
+
     return sanitizedUser
 }
 
@@ -69,8 +81,7 @@ function sanitizeUserName(userName: string): string {
     return userName
 }
 
-//will likely need to add checks for hashedPasswords
-function sanitizePassword(password: string): string {
+async function sanitizePassword(password: string): Promise<string> {
     if(password === undefined) throw new HttpException(400, 'Password is undefined')
 
     if(typeof password !== 'string') throw new HttpException(400, 'Password is not a string')
@@ -80,6 +91,9 @@ function sanitizePassword(password: string): string {
 
     if(password.length < 6) throw new HttpException(400, 'Password must be 6 characters or more')
 
+    //Hash the password for security within db
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(password, salt)
 
-    return password
+    return hashedPassword
 }

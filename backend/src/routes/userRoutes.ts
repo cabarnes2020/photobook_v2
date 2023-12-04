@@ -1,9 +1,10 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { createUser, deleteUser, getAllUsers, getUserById, updateUser } from '../controllers/UserController.js';
+import { createUser, deleteUser, getAllUsers, getUserById, loginUser, updateUser } from '../controllers/UserController.js';
 
 const userRouter = express.Router();
 
 userRouter.route('/').get(getAllUsers).post(createUser)
+userRouter.route('/login').post(loginUser)
 
 userRouter.route('/:id').get(getUserById).put(updateUser).delete(deleteUser)
 // //Route to get all users

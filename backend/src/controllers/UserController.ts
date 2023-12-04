@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
-import { getAllUsersService, getUserByIdService, createUserService, updateUserService, deleteUserService } from '../services/UserService.js';
+import { getAllUsersService, getUserByIdService, createUserService, updateUserService, deleteUserService, loginUserService } from '../services/UserService.js';
 import HttpException from '../utils/httpException.js';
 dotenv.config();
 /** Gets all photographers in database */
@@ -30,6 +30,11 @@ export const createUser = asyncHandler(async (req: Request, res: Response) => {
  
     res.status(201).json(newUser)
  });
+
+ export const loginUser = asyncHandler(async (req: Request, res: Response) => {
+    const loggedInUser = await loginUserService(req.body.email, req.body.password)
+    res.status(201).json(loggedInUser)
+ } )
 
 /** Update an instance of a photographer  */
 export const updateUser = asyncHandler(async (req: Request, res: Response) => {

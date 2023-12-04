@@ -1,7 +1,10 @@
+import bcrypt from 'bcrypt'
+
 import { checkIsValidObjectId } from "../database/db.js";
 import User, { IUserDocument } from "../models/User.js";
 import { IUser } from "../models/User.js";
-import { sanitizeUser } from "../sanitizers/userSanitizer.js";
+import { sanitizeLogin, sanitizeUser } from "../sanitizers/userSanitizer.js";
+import HttpException from "../utils/httpException.js";
 
 
 export async function getAllUsersService(): Promise<IUser[]> {
@@ -29,7 +32,7 @@ export async function getUserByIdService(userId: string): Promise<IUserDocument>
 
 /** Creates new instance of Photographer model */
 export async function createUserService(user: IUser): Promise<IUser> {
-    const cleanUser = sanitizeUser(user)
+    const cleanUser = await sanitizeUser(user)
     
     try {
         const newUser = await User.create(cleanUser) 
@@ -41,10 +44,28 @@ export async function createUserService(user: IUser): Promise<IUser> {
     }
 };
 
+export async function loginUserService(email: string, password: string): Promise<IUser> {
+    const sUser = await sanitizeLogin(email, password)
+    try{
+        const sanitizedUser = await User.findOne({email})
+        if(!sanitizedUser) throw new Error('User not found in database')
+
+        const isPasswordValid = await bcrypt.compare(password, sanitizedUser.password)
+        if(!isPasswordValid){
+         throw new Error('User password is invalid')
+        }
+
+
+        return sanitizedUser
+    } catch(err){
+        throw new Error(`Error logging user in: ${err}`)
+    }
+}
+
 /** Update an instance of a photographer  */
 export async function updateUserService(userId: string, user: IUser): Promise<IUser> {
     checkIsValidObjectId(userId)
-    const cleanUser = sanitizeUser(user)
+    const cleanUser = await sanitizeUser(user)
     try{
         const updatedUser = await User.findByIdAndUpdate(userId, cleanUser, { new: true });
         if (!updatedUser) throw new Error('User could not be updated')
