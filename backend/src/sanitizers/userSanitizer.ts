@@ -58,6 +58,9 @@ function sanitizeLastName(lastName: string): string {
 
 function sanitizeEmail(email: string): string {
     if(email === undefined) throw new HttpException(400, 'Email is undefined')
+
+    if(typeof email !== 'string') throw new HttpException(400, 'Email is not a string')
+
     
     const emailRegex = /^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,}$/
 
@@ -91,9 +94,5 @@ async function sanitizePassword(password: string): Promise<string> {
 
     if(password.length < 6) throw new HttpException(400, 'Password must be 6 characters or more')
 
-    //Hash the password for security within db
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
-
-    return hashedPassword
+    return password
 }

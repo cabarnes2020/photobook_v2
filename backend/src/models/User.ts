@@ -11,7 +11,14 @@ export interface IUser {
 
 export interface IUserDocument extends IUser, Document {}
 
-
+export interface SecureUserReturn {
+    _id: string,
+    firstName: string,
+    lastName: string,
+    userName: string,
+    email: string,
+    token: string
+}
 const UserSchema: Schema = new Schema(
     {
         firstName: {type: String, required: true},

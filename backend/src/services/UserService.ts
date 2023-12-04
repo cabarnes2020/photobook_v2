@@ -1,20 +1,21 @@
 import bcrypt from 'bcrypt'
 
 import { checkIsValidObjectId } from "../database/db.js";
-import User, { IUserDocument } from "../models/User.js";
+import User, { IUserDocument, SecureUserReturn } from "../models/User.js";
 import { IUser } from "../models/User.js";
 import { sanitizeLogin, sanitizeUser } from "../sanitizers/userSanitizer.js";
 import HttpException from "../utils/httpException.js";
+import { generateToken } from './TokenService.js';
 
 
 export async function getAllUsersService(): Promise<IUser[]> {
     try {
         // Returns all users in db
         const users = await User.find({});
-        if(!users) throw new Error('No users found ')
+        if(!users) throw new HttpException(404, 'No users found ')
         return users
     } catch (err) {
-        throw new Error('Error finding users')
+        throw new HttpException(404, `Error finding users: ${err}`)
     }
 };
 
@@ -26,39 +27,75 @@ export async function getUserByIdService(userId: string): Promise<IUserDocument>
         if(!user) throw new Error('User not found')
         return user
     } catch (err) {
-        throw new Error(`Error finding user`)    
+        throw new HttpException(400, `Error finding user: ${err}`)    
     }
 };
 
 /** Creates new instance of Photographer model */
-export async function createUserService(user: IUser): Promise<IUser> {
+export async function createUserService(user: IUser): Promise<SecureUserReturn> {
     const cleanUser = await sanitizeUser(user)
+    //Hash the password for security within db
+    const salt = await bcrypt.genSalt(10)
+    const hashedPassword = await bcrypt.hash(cleanUser.password, salt)
     
     try {
-        const newUser = await User.create(cleanUser) 
+        const newUser = await User.create({
+            firstName: cleanUser.firstName,
+            lastName: cleanUser.lastName,
+            email: cleanUser.email,
+            userName: cleanUser.userName,
+            password: hashedPassword,
+        }) 
         
-        if(!newUser) throw new Error('User not created')
-        return newUser
+        if(!newUser) throw new HttpException(400, 'User not created')
+
+        return {
+            _id: newUser._id,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            userName: newUser.userName,
+            email: newUser.email,
+            token: generateToken({
+                _id: newUser._id,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            userName: newUser.userName,
+            email: newUser.email,
+            })
+        }
     } catch (err) {
-        throw new Error(`Error creating user`)
+        throw new HttpException(400, `Error creating user: ${err}`)
     }
 };
 
-export async function loginUserService(email: string, password: string): Promise<IUser> {
-    const sUser = await sanitizeLogin(email, password)
+export async function loginUserService(email: string, password: string): Promise<SecureUserReturn> {
+    const sanitizedUser = await sanitizeLogin(email, password)
     try{
-        const sanitizedUser = await User.findOne({email})
-        if(!sanitizedUser) throw new Error('User not found in database')
+        const user = await User.findOne({ email })
+        if(!user) throw new HttpException(404, 'User not found')
 
-        const isPasswordValid = await bcrypt.compare(password, sanitizedUser.password)
+        const isPasswordValid = await bcrypt.compare(sanitizedUser.password, user.password)
         if(!isPasswordValid){
-         throw new Error('User password is invalid')
+         throw new HttpException(401, 'User password is invalid')
         }
 
 
-        return sanitizedUser
+        return {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            userName: user.userName,
+            email: user.email,
+            token: generateToken({
+                _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            userName: user.userName,
+            email: user.email,
+            })
+        }
     } catch(err){
-        throw new Error(`Error logging user in: ${err}`)
+        throw new HttpException(401, `Error logging user in: ${err}`)
     }
 }
 
@@ -68,10 +105,10 @@ export async function updateUserService(userId: string, user: IUser): Promise<IU
     const cleanUser = await sanitizeUser(user)
     try{
         const updatedUser = await User.findByIdAndUpdate(userId, cleanUser, { new: true });
-        if (!updatedUser) throw new Error('User could not be updated')
+        if (!updatedUser) throw new HttpException(404, 'User not found')
         return updatedUser
     } catch (err) {
-        throw new Error(`Error updating user`)
+        throw new HttpException(400, `Error updating user: ${err}`)
     }
 };
 
@@ -81,9 +118,9 @@ export async function deleteUserService(userId: string): Promise<void> {
 
     try{
         const deletedUser = await User.findByIdAndDelete(userId)
-        if(!deletedUser) throw new Error('User could not be deleted')
+        if(!deletedUser) throw new HttpException(404, 'User not found')
     } catch(err){
-        throw new Error(`Error deleting user`)
+        throw new HttpException(400, `Error deleting user: ${err}`)
     }
 };
 
