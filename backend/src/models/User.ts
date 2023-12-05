@@ -1,5 +1,6 @@
 import mongoose, {Document, Schema, Types} from 'mongoose'
 
+//base for simple validation
 export interface IUser {
     firstName: string,
     lastName: string, 
@@ -8,13 +9,26 @@ export interface IUser {
     password: string
 }
 
-export interface IUserModel extends IUser, Document {}
+export interface IUserDocument extends IUser, Document {}
 
+export interface SecureUserReturn {
+    _id: string,
+    firstName: string,
+    lastName: string,
+    userName: string,
+    email: string,
+    token: string
+}
+const UserSchema: Schema = new Schema(
+    {
+        firstName: {type: String, required: true},
+        lastName: {type: String, required: true},
+        email: {type: String, required: true, unique: true},
+        userName: {type: String, required: true, unique: true},
+        password: {type: String, required: true},
+    }, 
+    {
+        timestamps: true
+    })
 
-const UserSchema = new Schema<IUser>({
-    firstName: {type: String, required: true},
-    lastName: {type: String, required: true},
-    email: {type: String, required: true},
-    userName: {type: String, required: true},
-    password: {type: String, required: true},
-})
+export default mongoose.model<IUserDocument>('User', UserSchema);

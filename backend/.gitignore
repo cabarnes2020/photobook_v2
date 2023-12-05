@@ -1,0 +1,9 @@
+node_modules
+.env
+**/.DS_Store
+.DS_Store
+dist/
+dist/index.mjs
+dist/index.mjs.map
+../.DS_Store
+index.mjs
