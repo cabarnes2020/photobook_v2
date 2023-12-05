@@ -1,69 +1,42 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
-import Review from '../models/Review.js';
+import asyncHandler from 'express-async-handler'
+import HttpException from '../utils/httpException.js';
+import { createReviewService, deleteReviewService, getAllReviewsService, getReviewByIdService, updateReviewService } from '../services/ReviewService.js';
 
 /** Retrieves all reviews in database */
-export const getAllReviews = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        // Returns all
-        const reviews = await Review.find({});
+export const getAllReviews = asyncHandler( async (req: Request, res: Response) => {
+    const reviews = await getAllReviewsService()
+    res.status(200).json(reviews)
 
-        return res.status(200).json(reviews);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+});
 
 /** Retrieve a review by its id */
-export const getReviewByID = async (req: Request, res: Response, next: NextFunction) => {
-    const reviewId = req.params.userId;
-    try {
-        const review = await Review.findById(reviewId);
+export const getReviewByID = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    if(!req.params.id) throw new HttpException(400, 'Review ID is missing')
+    const review = await getReviewByIdService(req.params.id);
+    res.status(201).json(review)
 
-        return res.status(200).json(review);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+});
 
 /** Creates new instance of Review model */
-export const createReview = async (req: Request, res: Response, next: NextFunction) => {
-    const { review } = req.body;
-    try {
-        const newReview = new Review({
-            reviewer: review.reviewer,
-            content: review.content
-        });
-        await newReview.save();
-
-        return res.status(200).json(newReview);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+export const createReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const newReview = await createReviewService(req.body);
+    res.status(201).json(newReview)
+});
 
 /** Update a review  */
-export const updateReview = async (req: Request, res: Response, next: NextFunction) => {
-    const reviewId = req.params.reviewId;
+export const updateReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    if(!req.params.id) throw new HttpException(400, 'Review ID is missing')
+    const reviewId = req.params.id;
 
-    try {
-        const review = await Review.findByIdAndUpdate(reviewId, req.body, { new: true });
-
-        if (review) {
-            return res.status(200).json(review);
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({ message: 'Not found' });
-    }
-};
+    const updatedReview = await updateReviewService(reviewId, req.body)
+    res.status(200).json(updateReview)
+});
 
 /** Delete a specific photographer from the db */
-export const deleteReview = async (req: Request, res: Response, next: NextFunction) => {
-    const reviewId = req.params.reviewId;
+export const deleteReview = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    if(!req.params.id) throw new HttpException(400, 'Review ID is missing')
+    await deleteReviewService(req.params.id)
 
-    return await Review.findByIdAndDelete(reviewId).then((user) => (user ? res.status(201).json({ message: 'Review has been deleted' }) : res.status(404).json({ message: 'Not found' })));
-};
+    res.status(200).json({message: `Review ${req.params.id} is deleted`})
+});

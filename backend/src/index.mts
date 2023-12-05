@@ -3,16 +3,13 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import userRouter from './routes/userRoutes.js';
+import reviewRouter from './routes/reviewRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 import { connectDB } from './database/db.js';
 import { PORT } from './config/config.js';
 
 dotenv.config();
 
-// async function connectToMongoDB(connectionString: string) {
-//     await mongoose.connect(connectionString)
-//     console.log('Connected to MongoDB database!')
-// }
 
 const app = express();
 
@@ -38,6 +35,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use('/api/users', userRouter);
+app.use('/api/reviews', reviewRouter)
 app.use(errorHandler)
 
 /** Make sure server is working correctly */
