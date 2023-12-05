@@ -4,10 +4,10 @@ import { authorize } from '../middleware/authMiddleware.js';
 
 const userRouter = express.Router();
 
-userRouter.route('/').get(authorize, getAllUsers).post(createUser)
+userRouter.route('/').get(getAllUsers).post(createUser)
 userRouter.route('/login').post(loginUser)
 
-userRouter.route('/:id').get(getUserById).put(updateUser).delete(deleteUser)
+userRouter.route('/:id').get(getUserById).put(authorize, updateUser).delete(authorize, deleteUser)
 // //Route to get all users
 // //@access: public
 // userRouter.get('/', (req: Request, res: Response, next: NextFunction) => {

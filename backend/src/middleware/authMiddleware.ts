@@ -12,7 +12,6 @@ import { IUser } from '../models/User.js'
 export const authorize = asyncHandler(async(req: Request | any, res: Response, next: NextFunction) => {
     //expecting {headers: {authorization: "Bearer token"}}
 
-    console.log(req.headers, "HEADERS")
     if(!req.headers || !req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')){
         throw new HttpException(401, 'Unauthorized')
     }
@@ -21,6 +20,7 @@ export const authorize = asyncHandler(async(req: Request | any, res: Response, n
     const token = req.headers.authorization.split(' ')[1] || ''
     const decoded = verifyToken(token)
 
+    //adds user object to req object
     req.user = await getUserByIdService(decoded._id)
     next()
 })
