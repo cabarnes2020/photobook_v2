@@ -1,8 +1,5 @@
 import { Request, Response } from 'express';
 import asyncHandler from 'express-async-handler'
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 
 import { getAllUsersService, getUserByIdService, createUserService, updateUserService, deleteUserService, loginUserService } from '../services/UserService.js';

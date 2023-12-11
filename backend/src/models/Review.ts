@@ -5,7 +5,7 @@ export interface IReview {
     content: string;
 }
 
-export interface IReviewModel extends IReview, Document {}
+export interface IReviewDocument extends IReview, Document {}
 
 const ReviewSchema: Schema = new Schema(
     {
@@ -17,4 +17,4 @@ const ReviewSchema: Schema = new Schema(
     }
 );
 
-export default mongoose.model<IReviewModel>('Review', ReviewSchema);
+export default mongoose.model<IReviewDocument>('Review', ReviewSchema);
