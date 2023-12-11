@@ -1,73 +1,44 @@
 import { Request, Response, NextFunction } from 'express';
-import mongoose from 'mongoose';
-import Photographer from '../models/Photographer.js';
+import asyncHandler from 'express-async-handler'
+
+import HttpException from '../utils/httpException.js';
+import { getAllPhotographersService, getPhotographerByIdService, createPhotographerService, deletePhotographerService, updatePhotographerService } from '../services/PhotographerService.js';
 
 /** Retrieves all photographers in database */
-export const getAllPhotographers = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        // Returns all
-        const photographers = await Photographer.find({});
+export const getAllPhotographers = asyncHandler(async (req: Request, res: Response) => {
+        // Returns all photographers
+        const photographers = await getAllPhotographersService()
 
-        return res.status(200).json(photographers);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+        res.status(200).json(photographers);
+});
 
 /** Retrieve a photographer by its id */
-export const getPhotographerByID = async (req: Request, res: Response, next: NextFunction) => {
-    const photographerId = req.params.photographerId;
-    try {
-        const photographer = await Photographer.findById(photographerId);
-
-        return res.status(200).json(photographer);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+export const getPhotographerById = asyncHandler(async (req: Request, res: Response) => {
+    if(!req.params.id) throw new HttpException(400, 'Photographer ID is missing')
+        
+    const photographer = await getPhotographerByIdService(req.params.id);
+     res.status(200).json(photographer);
+});
 
 /** Creates new instance of Photographer model */
-export const createPhotographer = async (req: Request, res: Response, next: NextFunction) => {
-    const { photographer } = req.body;
-    try {
-        const newPhotographer = new Photographer({
-            firstName: photographer.firstName,
-            lastName: photographer.lastName,
-            email: photographer.email,
-            gallery: photographer.gallery
-        });
-        await newPhotographer.save();
-
-        return res.status(200).json(newPhotographer);
-    } catch (error) {
-        console.log(error);
-        return res.sendStatus(400);
-    }
-};
+export const createPhotographer = asyncHandler(async (req: Request, res: Response) => {
+    const newPhotographer = await createPhotographerService(req.body)
+  
+    res.status(201).json(newPhotographer);
+});
 
 /** Update an instance of a photographer  */
-export const updatePhotographer = async (req: Request, res: Response, next: NextFunction) => {
-    const photographerId = req.params.photographerId;
+export const updatePhotographer = asyncHandler( async (req: Request, res: Response, next: NextFunction) => {
+   if(!req.params.id) throw new HttpException(400, 'Photographer ID is missing.')
 
-    try {
-        const photographer = await Photographer.findByIdAndUpdate(photographerId, req.body, { new: true });
-
-        if (photographer) {
-            return res.status(200).json(photographer);
-        }
-    } catch (error) {
-        console.log(error);
-        res.status(404).json({ message: 'Not found' });
-    }
-};
+   const updatedPhotographer = await updatePhotographerService(req.params.id, req.body)
+   res.status(200).json(updatedPhotographer)
+});
 
 /** Delete a specific photographer from the db */
 export const deletePhotographer = async (req: Request, res: Response, next: NextFunction) => {
-    const photographerId = req.params.photographerId;
-
-    return await Photographer.findByIdAndDelete(photographerId).then((photographer) =>
-        photographer ? res.status(201).json({ message: 'Photographer has been deleted' }) : res.status(404).json({ message: 'Not found' })
-    );
+    if(!req.params.id) throw new HttpException(400, 'Photographer ID is missing.')
+    
+    await deletePhotographerService(req.params.id)
+    res.status(200).json({message: `Photographer ${req.params.id} is deleted.`})
 };

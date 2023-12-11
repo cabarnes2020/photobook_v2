@@ -5,17 +5,29 @@ export interface IPhotographer {
     firstName: string;
     lastName: string;
     email: string;
-    gallery: Types.Array<string>;
+    password: string
+    gallery: string[];
     reviews?: Types.Array<Types.ObjectId>;
 }
 
-export interface IPhotographerModel extends IPhotographer, Document {}
+export interface IPhotographerDocument extends IPhotographer, Document {}
+
+export interface SecurePhotographerReturn {
+    _id: string,
+    firstName: string,
+    lastName: string,
+    gallery: string[],
+    reviews?: Types.Array<Types.ObjectId>,
+    email: string,
+    token: string
+}
 
 const PhotographerSchema: Schema = new Schema(
     {
         firstName: { type: String, required: true },
         lastName: { type: String, required: true },
-        email: { type: String, required: true },
+        email: { type: String, required: true, unique: true },
+        password: {type: String, required: true},
         gallery: [{ type: String }],
         reviews: [{ type: Schema.Types.ObjectId, default: [], ref: 'Review' }]
     },
@@ -24,4 +36,4 @@ const PhotographerSchema: Schema = new Schema(
     }
 );
 
-export default mongoose.model<IPhotographerModel>('Photographer', PhotographerSchema);
+export default mongoose.model<IPhotographerDocument>('Photographer', PhotographerSchema);
