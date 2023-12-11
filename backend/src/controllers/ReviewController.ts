@@ -30,7 +30,7 @@ export const updateReview = asyncHandler(async (req: Request, res: Response, nex
     const reviewId = req.params.id;
 
     const updatedReview = await updateReviewService(reviewId, req.body)
-    res.status(200).json(updateReview)
+    res.status(200).json(updatedReview)
 });
 
 /** Delete a specific photographer from the db */
