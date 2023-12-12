@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import asyncHandler from 'express-async-handler'
 
 import HttpException from '../utils/httpException.js';
-import { getAllPhotographersService, getPhotographerByIdService, createPhotographerService, deletePhotographerService, updatePhotographerService } from '../services/PhotographerService.js';
+import { getAllPhotographersService, getPhotographerByIdService, createPhotographerService, deletePhotographerService, updatePhotographerService, loginPhotographerService } from '../services/PhotographerService.js';
 
 /** Retrieves all photographers in database */
 export const getAllPhotographers = asyncHandler(async (req: Request, res: Response) => {
@@ -27,6 +27,12 @@ export const createPhotographer = asyncHandler(async (req: Request, res: Respons
     res.status(201).json(newPhotographer);
 });
 
+export const loginPhotographer = asyncHandler(async (req: Request, res: Response) => {
+    const loggedInPhotographer = await loginPhotographerService(req.body.email, req.body.password)
+
+    res.status(201).json(loggedInPhotographer)
+})
+
 /** Update an instance of a photographer  */
 export const updatePhotographer = asyncHandler( async (req: Request, res: Response, next: NextFunction) => {
    if(!req.params.id) throw new HttpException(400, 'Photographer ID is missing.')
@@ -42,3 +48,4 @@ export const deletePhotographer = async (req: Request, res: Response, next: Next
     await deletePhotographerService(req.params.id)
     res.status(200).json({message: `Photographer ${req.params.id} is deleted.`})
 };
+

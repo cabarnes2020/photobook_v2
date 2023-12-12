@@ -4,7 +4,7 @@ import { checkIsValidObjectId } from "../database/db.js";
 import Photographer, { IPhotographer, IPhotographerDocument, SecurePhotographerReturn } from "../models/Photographer.js";
 import HttpException from "../utils/httpException.js";
 import { generateToken, generateTokenPhotographer } from './TokenService.js';
-import { sanitizePhotographer } from '../sanitizers/photographerSanitizer.js';
+import { sanitizeLogin, sanitizePhotographer } from '../sanitizers/photographerSanitizer.js';
 
 
 export async function getAllPhotographersService(): Promise<IPhotographer[]> {
@@ -67,6 +67,37 @@ export async function createPhotographerService(photographer: IPhotographer): Pr
         throw new HttpException(400, `Error creating photographer: ${err}`)
     }
 };
+
+export async function loginPhotographerService(email: string, password: string): Promise<SecurePhotographerReturn> {
+    const sanitizedPhotographer = await sanitizeLogin(email, password)
+    try{
+        const photographer = await Photographer.findOne({ email })
+        if(!photographer) throw new HttpException(404, 'Photographer not found')
+
+        const isPasswordValid = await bcrypt.compare(sanitizedPhotographer.password, photographer.password)
+        if(!isPasswordValid){
+         throw new HttpException(401, 'User password is invalid')
+        }
+
+
+        return {
+            _id: photographer._id,
+            firstName: photographer.firstName,
+            lastName: photographer.lastName,
+            email: photographer.email,
+            gallery: photographer.gallery,
+            token: generateTokenPhotographer({
+                _id: photographer._id,
+            firstName: photographer.firstName,
+            lastName: photographer.lastName,
+            email: photographer.email,
+            gallery: photographer.gallery
+            })
+        }
+    } catch(err){
+        throw new HttpException(401, `Error logging photographer in: ${err}`)
+    }
+}
 
 /** Update an instance of a photographer  */
 export async function updatePhotographerService(photographerId: string, photographer: IPhotographer): Promise<IPhotographer> {

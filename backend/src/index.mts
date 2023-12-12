@@ -7,6 +7,7 @@ import reviewRouter from './routes/reviewRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 import { connectDB } from './database/db.js';
 import { PORT } from './config/config.js';
+import photographerRouter from './routes/photographerRoutes.js';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use('/api/users', userRouter);
 app.use('/api/reviews', reviewRouter)
+app.use('/api/photographers', photographerRouter)
 app.use(errorHandler)
 
 /** Make sure server is working correctly */
